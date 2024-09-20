@@ -9,10 +9,10 @@ class Expense(pydantic.BaseModel):
 
 class User(pydantic.BaseModel):
     username: str
-    email: pydantic.EmailStr | None
-    full_name: str | None
-    expenses: list[Expense] | None
-    disabled: bool | None
+    email: pydantic.EmailStr | None = None
+    full_name: str | None = None
+    expenses: list[Expense] | None = None
+    disabled: bool | None = None
 
 
 class UserInDB(User):
