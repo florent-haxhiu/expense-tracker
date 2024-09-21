@@ -9,6 +9,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 fastapi = {extras = ["standard"], version = "^0.114.2"}
+pyjwt = "^2.9.0"
+passlib = "^1.7.4"
 
 
 [build-system]
