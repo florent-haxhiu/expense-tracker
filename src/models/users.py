@@ -1,19 +1,17 @@
-import pydantic
+from pydantic import BaseModel
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
-class Expense(pydantic.BaseModel):
-    id: int
-    name: str
-    cost: float
+class TokenData(BaseModel):
+    username: str | None = None
 
-
-class User(pydantic.BaseModel):
+class User(BaseModel):
     username: str
-    email: pydantic.EmailStr | None = None
+    email: str | None = None
     full_name: str | None = None
-    expenses: list[Expense] | None = None
     disabled: bool | None = None
-
 
 class UserInDB(User):
     hashed_password: str
