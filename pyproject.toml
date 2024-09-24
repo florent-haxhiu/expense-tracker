@@ -5,12 +5,16 @@ description = "API for an expense tracker"
 authors = ["Florent Haxhiu <florenthaxhiu03@gmail.com>"]
 license = "MIT License"
 readme = "README.md"
+packages = [{ include = "src" }]
+
 
 [tool.poetry.dependencies]
 python = "^3.12"
 fastapi = {extras = ["standard"], version = "^0.114.2"}
-pyjwt = "^2.9.0"
 passlib = "^1.7.4"
+bcrypt = "^4.2.0"
+python-dotenv = "^1.0.1"
+pyjwt = "^2.9.0"
 
 
 [build-system]
