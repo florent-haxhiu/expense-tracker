@@ -12,6 +12,8 @@ from config import ACCESS_TOKEN_EXPIRE_MINUTES
 from database import fake_users_db
 from datetime import timedelta
 
+from models.users import UserCreate
+
 router = APIRouter()
 
 @router.post("/token")
@@ -30,11 +32,16 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> T
     return Token(access_token=access_token, token_type="bearer")
 
 @router.post("/signup")
-async def signup(user: User):
+async def signup(user: UserCreate):
     """Allows a User to signup for an account"""
 
     user_dict = user.model_dump()
     user_dict["hashed_password"] = get_password_hash(user_dict["password"])
+    if user_dict["username"] in fake_users_db:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists",
+        )
     fake_users_db[user_dict["username"]] = user_dict
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
