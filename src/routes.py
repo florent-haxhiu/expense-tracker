@@ -12,6 +12,7 @@ from config import ACCESS_TOKEN_EXPIRE_MINUTES
 from database import fake_users_db
 from datetime import timedelta
 
+from models.expense import ExpenseCreate
 from models.users import UserCreate
 
 router = APIRouter()
@@ -54,3 +55,26 @@ async def signup(user: UserCreate):
 @router.get("/users/me")
 async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user
+
+
+@router.post("/expenses")
+async def create_expense(expense: ExpenseCreate, current_user: Annotated[User, Depends(get_current_user)]):
+    """Allows a User to create an expense"""
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Create a new expense for the user
+    new_expense = expense.model_dump()
+    new_expense["user_id"] = current_user.username
+    
+    # In a real database, you would insert the expense here
+    # For now, we'll just add it to the user's expenses in the fake database
+    if fake_users_db[current_user.username].get("expenses") is None:
+        fake_users_db[current_user.username]["expenses"] = []
+    fake_users_db[current_user.username]["expenses"].append(new_expense)
+    
+    return {"message": "Expense created successfully", "expense": new_expense}
