@@ -12,10 +12,11 @@ from config import ACCESS_TOKEN_EXPIRE_MINUTES
 from database import fake_users_db
 from datetime import timedelta
 
-from models.expense import ExpenseCreate
+from models.expense import Expense, ExpenseCreate
 from models.users import UserCreate
 
 router = APIRouter()
+
 
 @router.post("/token")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
@@ -31,6 +32,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> T
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
+
 
 @router.post("/signup")
 async def signup(user: UserCreate):
@@ -58,23 +60,48 @@ async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]
 
 
 @router.post("/expenses")
-async def create_expense(expense: ExpenseCreate, current_user: Annotated[User, Depends(get_current_user)]):
+async def create_expense(
+    expense: ExpenseCreate, current_user: Annotated[User, Depends(get_current_user)]
+):
     """Allows a User to create an expense"""
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
+    # if not current_user:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail="Invalid authentication credentials",
+    #         headers={"WWW-Authenticate": "Bearer"},
+    #     )
+
     # Create a new expense for the user
     new_expense = expense.model_dump()
     new_expense["user_id"] = current_user.username
-    
+
     # In a real database, you would insert the expense here
     # For now, we'll just add it to the user's expenses in the fake database
     if fake_users_db[current_user.username].get("expenses") is None:
         fake_users_db[current_user.username]["expenses"] = []
     fake_users_db[current_user.username]["expenses"].append(new_expense)
-    
+
     return {"message": "Expense created successfully", "expense": new_expense}
+
+
+@router.get("/expenses")
+async def get_user_expenses(
+    id: str, current_user: Annotated[User, Depends(get_current_user)]
+) -> Expense | list[Expense] | HTTPException:
+    """Get Request to get user expenses, can also specify which expense"""
+
+    if fake_users_db[current_user.username].get("expenses") is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User has no expenses",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if id:
+        for expense in fake_users_db[current_user.username]["expenses"]:
+            if expense["id"] == id:
+                return Expense(**expense)
+    return [
+        Expense(**expense)
+        for expense in fake_users_db[current_user.username]["expenses"]
+    ]
